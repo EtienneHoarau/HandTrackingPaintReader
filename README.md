@@ -8,7 +8,7 @@ The application uses two hands:
 
 ## About this fork
 
-This project is a fork of [YohannTPN/HandTrackingPaint](https://github.com/YohannTPN/HandTrackingPaint). The original project is credited under its MIT license.
+This project is a fork (stolen one)of [YohannTPN/HandTrackingPaint](https://github.com/YohannTPN/HandTrackingPaint). The original project is credited under its MIT license.
 
 This fork was **vibecoded**: its changes were developed through iterative, AI-assisted coding.
 
