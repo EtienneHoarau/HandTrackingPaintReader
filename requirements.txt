@@ -3,3 +3,5 @@
 mediapipe>=0.10
 opencv-python
 numpy
+# Tkinter is part of the Python standard library.
+# On Debian/Ubuntu, install it separately with: sudo apt install python3-tk

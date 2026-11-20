@@ -25,6 +25,7 @@ class UI:
         self.layers = None
         self.stroke_mask = None
         self.buttons = []
+        self.is_recording = False
         self.layer_buttons = []
         self.is_panel_open = False
         self.panel = None
@@ -74,9 +75,13 @@ class UI:
         }
         labels={"brush":"Brush","fill":"Fill","eraser":"Eraser","undo":"Undo","redo":"Redo","colors":"Colors","save":"Save"}
         for key,pos,size in self.layout.toolbar_buttons():
-            self.buttons.append(Button(pos,size,labels[key],actions[key]))
+            button=Button(pos,size,labels[key],actions[key])
+            self.buttons.append(button)
         self._build_layer_buttons()
         self._build_color_panel()
+
+    def set_recording(self, recording):
+        self.is_recording=bool(recording)
 
     def _build_layer_buttons(self):
         x=self.layout.width-self.layout.right_w+8
@@ -332,6 +337,11 @@ class UI:
     # ---- Pointer interaction ----
     def button_at(self,point):return next((b for b in self.buttons if b.contains(point)),None)
     def handle_click(self,point):
+        button=self.button_at(point)
+        if button:
+            print(f"Button click detected: {button.label}")
+            if button.enabled:button.action()
+            return True
         if self.is_panel_open:
             color=self.color_wheel.select_color(point)
             if color is not None:self.change_color(color); return True
@@ -342,9 +352,6 @@ class UI:
                 self.active_slider=slider; slider.set_value_from_point(point); return True
             if not self.panel.contains(point):self.is_panel_open=False
             return True
-        button=self.button_at(point)
-        if button:
-            button.action(); return True
         for button in self.layer_buttons:
             if button.contains(point):button.action(); return True
         index=self.layers_view.index_at(point)
@@ -368,8 +375,11 @@ class UI:
         print(f"Drawing saved : {filename}")
         return filename
     
-    def show(self, camera_frame, cursor=None, drawing=False):
-        cv2.imshow("Camera", camera_frame)
+    def show(self, camera_frame, cursor=None, drawing=False, camera_hovered=None):
+        camera_view = self.draw_camera_controls(
+            camera_frame, camera_hovered, cursor, drawing, self.is_recording
+        )
+        cv2.imshow("Camera", camera_view)
 
         paint_frame = self.renderer.compose(cursor, drawing)
 
@@ -377,4 +387,67 @@ class UI:
             self.draw_tutorial(paint_frame)
 
         cv2.imshow("Paint", paint_frame)
+
+    def draw_camera_controls(self, camera_frame, hovered=None, cursor=None,
+                             pinching=False, recording=False):
+        image = camera_frame.copy()
+        height, width = image.shape[:2]
+        self.camera_buttons = self._camera_button_layout(width, height)
+
+        for action, label, color in (
+            ("record", "Record", (65, 65, 100)),
+            ("play", "Play", (190, 115, 75)),
+        ):
+            if action == "record" and recording:
+                label, color = "Stop", (35, 35, 220)
+            bx, by, bw, bh = self.camera_buttons[action]
+            region = image[by:by + bh, bx:bx + bw]
+            fill = np.full_like(region, color)
+            image[by:by + bh, bx:bx + bw] = cv2.addWeighted(fill, 0.75, region, 0.25, 0)
+            if hovered == action:
+                border = (0, 255, 255)
+            elif recording and action == "record":
+                border = color
+            else:
+                border = (235, 235, 235)
+            cv2.rectangle(image, (bx, by), (bx + bw, by + bh), border, 2)
+            font_scale = min(0.7, max(0.35, bw / 180 * 0.7))
+            (text_width, text_height), _ = cv2.getTextSize(
+                label, cv2.FONT_HERSHEY_SIMPLEX, font_scale, 2
+            )
+            text_x = bx + (bw - text_width) // 2
+            text_y = by + (bh + text_height) // 2
+            cv2.putText(
+                image, label, (text_x, text_y), cv2.FONT_HERSHEY_SIMPLEX,
+                font_scale, (255, 255, 255), 2, cv2.LINE_AA
+            )
+
+        if cursor is not None:
+            point = tuple(map(int, cursor))
+            color = (0, 255, 0) if pinching else (0, 255, 255)
+            cv2.circle(image, point, max(7, min(width, height) // 60), color, 2, cv2.LINE_AA)
+
+        return image
+
+    @staticmethod
+    def _camera_button_layout(width, height):
+        gap = max(12, min(28, width // 30))
+        button_width = min(180, max(1, (width - 3 * gap) // 2))
+        button_height = min(62, max(42, int(height * 0.1)))
+        x = (width - (2 * button_width + gap)) // 2
+        y = min(height - button_height, max(0, int(height * 0.68) - button_height // 2))
+        return {
+            "record": (x, y, button_width, button_height),
+            "play": (x + button_width + gap, y, button_width, button_height),
+        }
+
+    def camera_action_at(self, point, frame_shape=None):
+        if frame_shape is not None:
+            height, width = frame_shape[:2]
+            self.camera_buttons = self._camera_button_layout(width, height)
+        x, y = point
+        for action, (bx, by, bw, bh) in getattr(self, "camera_buttons", {}).items():
+            if bx <= x < bx + bw and by <= y < by + bh:
+                return action
+        return None
 

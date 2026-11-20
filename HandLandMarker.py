@@ -95,13 +95,17 @@ class HandLandMarker:
 
     def run(self):
         cap = cv2.VideoCapture(self.camera_index)
+        if not cap.isOpened():
+            cap.release()
+            raise RuntimeError(
+                f"Unable to open camera index {self.camera_index}; check camera permissions."
+            )
         self._start = time.time()
         try:
             while cap.isOpened():
                 success, frame = cap.read()
                 if not success:
-                    print("Ignoring empty camera frame.")
-                    continue
+                    break
 
                 frame = cv2.flip(frame, 1)
                 result = self.detect(frame)

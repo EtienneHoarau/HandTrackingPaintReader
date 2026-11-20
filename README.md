@@ -6,6 +6,18 @@ The application uses two hands:
 - **Drawing hand:** controls the cursor and draws using a pinch gesture.
 - **Command hand:** triggers tools and interface actions using predefined gestures.
 
+## About this fork
+
+This project is a fork of [YohannTPN/HandTrackingPaint](https://github.com/YohannTPN/HandTrackingPaint). The original project is credited under its MIT license.
+
+This fork was **vibecoded**: its changes were developed through iterative, AI-assisted coding.
+
+Fork-specific changes:
+- The Camera and Paint windows open immediately, with Play and Record controls over the camera feed.
+- Play selects a video and processes it through the hand-tracking drawing pipeline.
+- Record toggles camera recording; stopping opens a dialog to choose the filename, destination, and MP4 or AVI format.
+- Windows, macOS, and Linux setup and runtime compatibility improvements.
+
 ## Download
 
 Download the latest Windows version from
@@ -29,15 +41,21 @@ Extract the ZIP archive and launch `HandTrackingPaint.exe`.
   - Live preview of the current colour.
   - History of the last five colours used.
 - **Responsive interface:** the layout adapts to the camera resolution.
-- **Startup tutorial:** an on-screen guide explains the gestures when the application starts. Press `H` to reopen it.
+- **Video drawing:** click or pinch Play over the camera feed to choose a video and process it with the hand-tracking model.
+- **Camera recording:** use Record over the camera feed (mouse click or pinch) to start recording. Stop it the same way to choose a name, destination, and MP4 or AVI format; both formats can be opened with Play.
+- **Startup tutorial:** an on-screen guide explains the gestures in the live drawing interface. Press `H` to reopen it; it is hidden during video playback.
 - **Save:** export your drawing as a PNG image.
 
 ## Requirements
 
+- Windows, macOS, or Linux.
 - Python 3.11 (the version used during development).
 - A webcam.
 - The MediaPipe `hand_landmarker.task` model file.
 - The dependencies listed in `requirements.txt`.
+- Tkinter for the video file picker (included with standard Python installers on Windows and macOS; install `python3-tk` separately on Debian/Ubuntu).
+
+On macOS, allow camera access for the terminal or application used to launch the project when prompted.
 
 ## Installation
 
@@ -277,7 +295,7 @@ Gesture behaviour can be adjusted in `HandPaint.py`.
 
 The interface layout is calculated dynamically according to the camera resolution.
 
-## Building an Executable (Windows)
+## Building an Executable
 
 The project can be packaged into a standalone application using PyInstaller.
 
@@ -287,13 +305,19 @@ Install PyInstaller:
 pip install pyinstaller
 ```
 
-Build the application:
+Build on Windows:
 
 ```bash
 pyinstaller --noconfirm --clean --onedir --windowed --name "HandTrackingPaint" --add-data "hand_landmarker.task;." --collect-all mediapipe --collect-all cv2 --collect-all numpy main.py
 ```
 
-The executable will be generated in:
+On macOS, use `:` instead of `;` in the `--add-data` argument:
+
+```bash
+pyinstaller --noconfirm --clean --onedir --windowed --name "HandTrackingPaint" --add-data "hand_landmarker.task:." --collect-all mediapipe --collect-all cv2 --collect-all numpy main.py
+```
+
+The application will be generated in:
 
 ```text
 dist/HandTrackingPaint/

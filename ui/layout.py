@@ -24,7 +24,8 @@ class Layout:
         from Button import Button
         labels = [
             ("Brush", "brush"), ("Fill", "fill"), ("Eraser", "eraser"),
-            ("Undo", "undo"), ("Redo", "redo"), ("Colors", "colors"), ("Save", "save")
+            ("Undo", "undo"), ("Redo", "redo"), ("Colors", "colors"),
+            ("Save", "save")
         ]
         margin, gap = 7, 5
         available = self.width - self.right_w - 2*margin - gap*(len(labels)-1)

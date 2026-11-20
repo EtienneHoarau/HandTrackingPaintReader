@@ -27,8 +27,9 @@ class Renderer:
     def draw_footer(self,image,drawing):
         u=self.ui; y=u.layout.height-u.layout.footer_h
         cv2.rectangle(image,(0,y),(u.layout.width,u.layout.height),HEADER,-1)
-        status="DRAWING" if drawing else "READY"
-        cv2.putText(image,status,(10,u.layout.height-7),cv2.FONT_HERSHEY_SIMPLEX,.36,GREEN if drawing else MUTED,1,cv2.LINE_AA)
+        status="REC - PINCH STOP TO SAVE" if u.is_recording else ("DRAWING" if drawing else "READY")
+        status_color=(40,40,230) if u.is_recording else (GREEN if drawing else MUTED)
+        cv2.putText(image,status,(10,u.layout.height-7),cv2.FONT_HERSHEY_SIMPLEX,.36,status_color,1,cv2.LINE_AA)
         cv2.putText(image,"S: SAVE   |   Q: QUIT",(max(125,u.layout.width-u.layout.right_w-145),u.layout.height-7),cv2.FONT_HERSHEY_SIMPLEX,.32,MUTED,1,cv2.LINE_AA)
 
     def draw_cursor(self,image,cursor,drawing):
